@@ -22,4 +22,34 @@ pipeline {
             }
         }
     }
+    post {
+        success {
+          sh '''
+          #!/bin/bash
+          curl -D- -u sagarpatr:Sudhir#patro55 -X POST --data '{"fields":{"project":{"key": "TES"},"summary": "New Change has been pushed Successfully!!!!! with build number : '${BUILD_NUMBER}'","description": "The latest successful build info can be found at : '${BUILD_URL}'","issuetype": {"name": "New Feature"}}}' -H "Content-Type: application/json" http://localhost:8085/rest/api/2/issue/
+ 
+        '''
+		        }
+        failure {
+          sh '''
+ 
+          curl -D- -u sagarpatr:Sudhir#patro55 -X POST --data '{"fields":{"project":{"key": "TES"},"summary": "The build has been failed!! with build number : '${BUILD_NUMBER}'","description": "The Build failure console can be found at : '${BUILD_URL}'","issuetype": {"name": "Bug"}}}' -H "Content-Type: application/json" http://localhost:8085/rest/api/2/issue/
+ 
+        '''
+      }
+        unstable {
+          sh '''
+ 
+          curl -D- -u sagarpatr:Sudhir#patro55 -X POST --data '{"fields":{"project":{"key": "TES"},"summary": "The build is unstable with build number : '${BUILD_NUMBER}'","description": "The unstable Build console can be found at : '${BUILD_URL}'","issuetype": {"name": "Bug"}}}' -H "Content-Type: application/json" http://localhost:8085/rest/api/2/issue/
+ 
+        '''
+      }
+      always {
+                
+            emailext body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}\n More info at: ${env.BUILD_URL}",
+                recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
+                subject: "Jenkins Build ${currentBuild.currentResult}: Job ${env.JOB_NAME}"
+            
+        }
+    }
 }
